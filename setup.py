@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from distutils.core import setup
+from setuptools import setup
 
 setup(
     name='cloudkick',
@@ -37,5 +37,5 @@ setup(
         'Programming Language :: Python',
         'Topic :: Software Development :: Libraries :: Python Modules'
     ],
-    requires='oauth',
+    install_requires='oauth',
 )
