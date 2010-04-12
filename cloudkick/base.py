@@ -54,7 +54,7 @@ class Connection(object):
       except Exception, e:
         errors.append(e)
         continue
-    raise Exception("Unable to open configuration files: %s %s" %
+    raise IOError("Unable to open configuration files: %s %s" %
                       (", ".join(self.config_path),
                        ", ".join([str(e) for e in errors])))
 

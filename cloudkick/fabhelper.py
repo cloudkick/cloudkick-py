@@ -16,6 +16,7 @@
 
 __all__ = ["hosts", "roledefs", "load"]
 
+import sys
 from cloudkick.base import Connection
 from collections import defaultdict
 
@@ -43,7 +44,12 @@ def roledefs():
 
 def load(x = None):
   from fabric.api import env
-  env.hosts = hosts()
-  env.roledefs = roledefs()
+  try:
+    env.hosts = hosts()
+    env.roledefs = roledefs()
+  except IOError, e:
+    # Don't print a huge stack trace if there's a problem. Most likely cloudkick.conf isn't in the path.
+    print e
+    sys.exit()
   return x
 
