@@ -17,7 +17,7 @@
 __all__ = ["Connection"]
 
 import os
-import httplib
+import urllib
 from oauth import oauth
 
 try:
@@ -95,14 +95,9 @@ class Connection(object):
                                                                 http_url=url,
                                                                 parameters=parameters)
     oauth_request.sign_request(signature_method, consumer, None)
-    connection = httplib.HTTPSConnection(self.API_SERVER)
     url = oauth_request.to_url()
-    connection.request(oauth_request.http_method, url)
-    response = connection.getresponse()
-    status = int(response.status)
-    if status > 300 or status <= 199:
-      raise Exception("Unexpected HTTP status: %d\n  URL: %s" % (status, url))
-    s = response.read()
+    f = urllib.urlopen(url)
+    s = f.read()
     return s
 
   def _request_json(self, *args):
@@ -113,6 +108,27 @@ class Connection(object):
     nodes = self._request_json("query/nodes", {'query': query})
     return nodes
 
+  def checks(self, node):
+    checks = self._request_json("query/check", {'node': node})
+    return checks
+
+  def data(self, check, name, start, end, interval="twenty_mins"):
+    data = self._request_json("query/check/data", {'interval': interval,
+                                                   'metric.0.id': check,
+                                                   'metric.0.name': name,
+                                                   'start': start.strftime('%s'),
+                                                   'end': end.strftime('%s') }
+                                                   )
+    return data
+
+
 if __name__ == "__main__":
+  from pprint import pprint
+  from datetime import datetime, timedelta
   c = Connection()
-  print c.nodes("provider:rs")
+  nodes = c.nodes()
+  nid = nodes[6]['id']
+  checks =  c.checks(nid)
+  check = checks[0][nid][0]
+  now = datetime.now()
+  pprint(check)
