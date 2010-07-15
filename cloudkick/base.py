@@ -116,6 +116,14 @@ class Connection(object):
     checks = self._request_json("query/check", {'node': node})
     return checks
 
+  def live_data(self, node_id, check_name = 'mem'):
+    if not check_name in ['mem', 'disk', 'cpu']:
+      return False
+
+    live_data = self._request_json("query/node/%s/check/%s" % (node_id,
+    check_name), {})
+    return live_data
+
   def data(self, check, name, start, end, interval = 20):
     data = self._request_json("query/check/data", {'interval': interval,
                                                    'metric.0.id': check,
