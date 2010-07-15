@@ -102,7 +102,11 @@ class Connection(object):
 
   def _request_json(self, *args):
     r = self._request(*args)
-    return json.loads(r)
+    
+    try:
+    	return json.loads(r)
+    except ValueError:
+    	return r
 
   def nodes(self, query = "*"):
     nodes = self._request_json("query/nodes", {'query': query})
