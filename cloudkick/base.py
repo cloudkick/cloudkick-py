@@ -116,7 +116,7 @@ class Connection(object):
     checks = self._request_json("query/check", {'node': node})
     return checks
 
-  def data(self, check, name, start, end, interval="twenty_mins"):
+  def data(self, check, name, start, end, interval = 20):
     data = self._request_json("query/check/data", {'interval': interval,
                                                    'metric.0.id': check,
                                                    'metric.0.name': name,
