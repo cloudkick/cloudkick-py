@@ -37,9 +37,9 @@ class Connection(object):
   API_SERVER = "api.cloudkick.com"
   API_VERSION = "1.0"
 
-  def __init__(self, config_path = None):
-    self.__oauth_key = None
-    self.__oauth_secret = None
+  def __init__(self, config_path = None, oauth_key = None, oauth_secret = None):
+    self.__oauth_key = oauth_key or None
+    self.__oauth_secret = oauth_secret or None
     if config_path is None:
       config_path = [os.path.join(os.path.expanduser('~'), ".cloudkick.conf"), "/etc/cloudkick.conf"]
     if not isinstance(config_path, list):
