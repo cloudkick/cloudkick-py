@@ -93,20 +93,32 @@ class Connection(object):
     url = 'https://' + self.API_SERVER + '/' + self.API_VERSION + '/' + url
     oauth_request = oauth.OAuthRequest.from_consumer_and_token(consumer,
                                                                 http_url=url,
+                                                                http_method=method,
                                                                 parameters=parameters)
     oauth_request.sign_request(signature_method, consumer, None)
-    url = oauth_request.to_url()
-    f = urllib.urlopen(url)
+    if method.upper() == 'GET':
+      url = oauth_request.to_url()
+      data = None
+    elif method.upper() == 'POST':
+      data = oauth_request.to_postdata()
+    f = urllib.urlopen(url, data=data)
     s = f.read()
     return s
 
-  def _request_json(self, *args):
-    r = self._request(*args)
+  def _request_json(self, *args, **kwargs):
+    r = self._request(*args, **kwargs)
     
     try:
     	return json.loads(r)
     except ValueError:
     	return r
+
+  def create_node(self, name, ip_address, details=None):
+    if not details:
+      details = {}
+    details = json.dumps(details)
+    data = { 'name': name, 'ip_address': ip_address , 'details': details }
+    return self._request_json("query/node", data, method='POST')
 
   def nodes(self, query = "*"):
     nodes = self._request_json("query/nodes", {'query': query})
