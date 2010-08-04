@@ -35,6 +35,7 @@ class Connection(object):
   """
 
   API_SERVER = "api.cloudkick.com"
+#  API_SERVER = "127.0.0.1:8000"
   API_VERSION = "1.0"
 
   def __init__(self, config_path = None, oauth_key = None, oauth_secret = None):
@@ -116,9 +117,24 @@ class Connection(object):
   def create_node(self, name, ip_address, details=None):
     if not details:
       details = {}
-    details = json.dumps(details)
     data = { 'name': name, 'ip_address': ip_address , 'details': details }
     return self._request_json("query/node", data, method='POST')
+
+  def create_check(self, node_id, check_type, details=None):
+    if not details:
+      details = {}
+    data = { 'node_id': node_id, 'type': check_type , 'details': details }
+    return self._request_json("query/check", data, method='POST')
+
+  def create_address(self, name, address_type, details=None):
+    if not details:
+      details = {}
+    data = { 'name': name, 'type': address_type , 'details': details }
+    return self._request_json("query/address", data, method='POST')
+
+  def list_addresses(self):
+    addresses = self._request_json("query/address")
+    return addresses
 
   def nodes(self, query = "*"):
     nodes = self._request_json("query/nodes", {'query': query})
