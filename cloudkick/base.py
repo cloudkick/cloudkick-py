@@ -133,7 +133,7 @@ class Connection(object):
     return self._request_json("query/address", data, method='POST')
 
   def list_addresses(self):
-    addresses = self._request_json("query/address")
+    addresses = self._request_json("query/address", {})
     return addresses
 
   def nodes(self, query = "*"):
