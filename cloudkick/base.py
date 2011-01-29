@@ -25,17 +25,120 @@ try:
 except:
   import simplejson as json
 
+API_CALLS = {
+ '1.0': {
+         'nodes': {
+           'endpoint': 'query/nodes',
+           'arguments': {
+              'query': {
+                'name': 'query',
+                'description': 'Cloudkick query',
+                'type': 'query_string',
+                'required': True,
+                'default_value': 'all',
+                'valid_values': []
+               }
+            },
+           'description': 'Return a list of nodes matching a query.',
+            'wiki_url': '',
+         },
+
+         'checks': {
+            'endpoint': 'query/check',
+            'arguments': {},
+            'description': 'Return a list of checks.',
+            'wiki_url': '',
+         },
+
+         'live_data': {
+            'endpoint': 'query/node/%(node_id)s/check/%(check_name)s',
+            'arguments': {
+              'node_id': {
+                'name': 'node_id',
+                'description': 'Node ID',
+                'type': 'url',
+                'required': True,
+                'default_value': None,
+                'valid_values': []
+              },
+              'check_name': {
+                'name': 'check_name',
+                'description': 'Check name',
+                'type': 'url',
+                'required': True,
+                'default_value': 'cpu',
+                'valid_values': [ 'cpu', 'mem', 'disk' ]
+                }
+            },
+            'description': '',
+            'wiki_url': '',
+         },
+
+         'check_data': {
+            'endpoint': 'query/check/data',
+            'arguments': {
+              'check_id': {
+                'name': 'metric.0.id',
+                'description': 'Metric ID',
+                'type': 'query_string',
+                'required': True,
+                'default_value': None,
+                'valid_values': []
+              },
+              'metric_name': {
+                'name': 'metric.0.name',
+                'description': 'Metric name',
+                'type': 'query_string',
+                'required': True,
+                'default_value': None,
+                'valid_values': []
+              },
+              'start': {
+                'name': 'start',
+                'description': 'Start time',
+                'type': 'query_string',
+                'required': True,
+                'default_value': None,
+                'valid_values': [],
+                'format_function': lambda x: x.strftime('%s')
+              },
+              'end': {
+                'name': 'end',
+                'description': 'End time',
+                'type': 'query_string',
+                'required': True,
+                'default_value': '',
+                'valid_values': [ ],
+                'format_function': lambda x: x.strftime('%s')
+              },
+              'interval': {
+                'name': 'interval',
+                'description': 'Interval',
+                'type': 'query_string',
+                'required': True,
+                'default_value': 20,
+                'valid_values': []
+              }
+            },
+             'description': 'Return check data.',
+             'wiki_url': '',
+         },
+  },
+
+ '2.0': {
+ }
+}
+
 
 class Connection(object):
   """
   Cloudkick API Connection Object
 
-  Provides an interface to the Cloudkick API over an HTTPS connection, 
+  Provides an interface to the Cloudkick API over an HTTPS connection,
   using OAuth to authenticate requests.
   """
 
   API_SERVER = "api.cloudkick.com"
-  API_VERSION = "1.0"
 
   def __init__(self, config_path = None, oauth_key = None, oauth_secret = None):
     self.__oauth_key = oauth_key or None
@@ -87,10 +190,68 @@ class Connection(object):
       self._read_config()
     return self.__oauth_secret
 
+  def _api_request(self, call, api_version, kwargs):
+    if api_version not in API_CALLS.keys():
+      raise ValueError('Invalid API version: %s' % (api_version))
+
+    call_dict = API_CALLS[api_version][call]
+    required_arguments = [key for key, values in call_dict['arguments'].items() if
+                          values['required']]
+
+    query_string_values = {}
+    url_values = {}
+    post_values = {}
+    for key, values in call_dict['arguments'].iteritems():
+      kwarg_value = kwargs.get(key, None)
+      if values['required'] and values['default_value'] and not \
+         key in kwargs:
+         kwarg_value = values['default_value']
+
+      if values['required'] and not kwarg_value:
+        raise ValueError('Missing required argument: %s' % (key))
+
+      if values['valid_values'] and kwarg_value not in values['valid_values']:
+        raise ValueError('Invalid value %s for argument %s, valid values are: %s' %
+                         (kwarg_value, key, ', ' . join(values['valid_values'])))
+
+      argument_type = values['type']
+      argument_name = values['name']
+      format_function = values.get('format_function', None)
+
+      if format_function:
+        kwarg_value = format_function(kwarg_value)
+
+      if argument_type == 'query_string':
+        query_string_values[argument_name] = kwarg_value
+      elif argument_type == 'url':
+        url_values[argument_name] = kwarg_value
+      elif argument_type == 'post':
+        post_values[argument_name] = kwarg_value
+
+    path = '/%s/%s' % (api_version, call_dict['endpoint'])
+    kwarg_dict = self._build_request_kwarg_dict(path,
+                                                query_string_values,
+                                                url_values, post_values)
+
+    return self._request_json(**kwarg_dict)
+
+  def _build_request_kwarg_dict(self, path, query_string_values, url_values,
+                                post_values):
+
+    if url_values:
+      path = path % url_values
+
+    parameters = query_string_values or {}
+    post_values = post_values or {}
+
+    kwarg_dict = { 'url': path, 'parameters': parameters,
+                   'method': 'POST' if post_values else 'GET' }
+    return kwarg_dict
+
   def _request(self, url, parameters, method='GET'):
     signature_method = oauth.OAuthSignatureMethod_HMAC_SHA1()
     consumer = oauth.OAuthConsumer(self.oauth_key, self.oauth_secret)
-    url = 'https://' + self.API_SERVER + '/' + self.API_VERSION + '/' + url
+    url = 'https://' + self.API_SERVER + url
     oauth_request = oauth.OAuthRequest.from_consumer_and_token(consumer,
                                                                 http_url=url,
                                                                 parameters=parameters)
@@ -100,47 +261,26 @@ class Connection(object):
     s = f.read()
     return s
 
-  def _request_json(self, *args):
-    r = self._request(*args)
-    
-    try:
-    	return json.loads(r)
-    except ValueError:
-    	return r
+  def _request_json(self, *args, **kwargs):
+    r = self._request(*args, **kwargs)
 
-  def nodes(self, query = "*"):
-    nodes = self._request_json("query/nodes", {'query': query})
+    try:
+      return json.loads(r)
+    except ValueError:
+      return r
+
+  def nodes(self, **kwargs):
+    nodes = self._api_request('nodes', '1.0', kwargs)
     return nodes
 
-  def checks(self, node):
-    checks = self._request_json("query/check", {'node': node})
+  def checks(self, **kwargs):
+    checks = self._api_request('checks', '1.0', kwargs)
     return checks
 
-  def live_data(self, node_id, check_name = 'mem'):
-    if not check_name in ['mem', 'disk', 'cpu']:
-      return False
-
-    live_data = self._request_json("query/node/%s/check/%s" % (node_id,
-    check_name), {})
+  def live_data(self, **kwargs):
+    live_data = self._api_request('live_data', '1.0', kwargs)
     return live_data
 
-  def data(self, check, name, start, end, interval = 20):
-    data = self._request_json("query/check/data", {'interval': interval,
-                                                   'metric.0.id': check,
-                                                   'metric.0.name': name,
-                                                   'start': start.strftime('%s'),
-                                                   'end': end.strftime('%s') }
-                                                   )
+  def check_data(self, **kwargs):
+    data = self._api_request('check_data', '1.0', kwargs)
     return data
-
-
-if __name__ == "__main__":
-  from pprint import pprint
-  from datetime import datetime, timedelta
-  c = Connection()
-  nodes = c.nodes()
-  nid = nodes[6]['id']
-  checks =  c.checks(nid)
-  check = checks[0][nid][0]
-  now = datetime.now()
-  pprint(check)
