@@ -40,7 +40,7 @@ API_CALLS = {
                }
             },
            'description': 'Return a list of nodes matching a query.',
-            'wiki_url': '',
+           'wiki_url': '',
          },
 
          'checks': {
@@ -123,7 +123,15 @@ API_CALLS = {
              'description': 'Return check data.',
              'wiki_url': '',
          },
-  },
+
+         'monitor_ips': {
+           'endpoint': 'monitor_ips',
+           'arguments': {},
+           'description': 'Return a list of Cloudkick monitoring IPs.',
+           'wiki_url': '',
+         },
+
+},
 
  '2.0': {
  }
@@ -283,4 +291,8 @@ class Connection(object):
 
   def check_data(self, **kwargs):
     data = self._api_request('check_data', '1.0', kwargs)
+    return data
+
+  def monitor_ips(self, **kwargs):
+    data = self._api_request('monitor_ips', '1.0', kwargs)
     return data
