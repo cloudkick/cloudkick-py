@@ -133,7 +133,91 @@ API_CALLS = {
 },
 
  '2.0': {
- }
+        'checks_by_status': {
+           'endpoint': 'status/nodes',
+           'arguments': {
+              'status': {
+                'name': 'overall_check_statuses',
+                'description': 'Check status',
+                'type': 'query_string',
+                'required': True,
+                'default_value': 'Error',
+                'valid_values': [ 'Ok', 'Error', 'Warning' ]
+              },
+              'include_metrics': {
+                'name': 'include_metrics',
+                'description': 'Include metrics in the response?',
+                'type': 'query_string',
+                'required': False,
+                'default_value': '',
+                'valid_values': [ 'true', 'false' ]
+               }
+           },
+           'description': 'Return a list of checks with a given status.',
+           'wiki_url': '',
+        },
+        'checks_by_id': {
+           'endpoint': 'status/nodes',
+           'arguments': {
+              'check_id': {
+                'name': 'check_id',
+                'description': 'Check ID',
+                'type': 'query_string',
+                'required': True,
+                'default_value': '',
+                'valid_values': []
+              },
+              'include_metrics': {
+                'name': 'include_metrics',
+                'description': 'Include metrics in the response?',
+                'type': 'query_string',
+                'required': False,
+                'default_value': '',
+                'valid_values': [ 'true', 'false' ]
+               }
+           },
+           'description': 'Return a list of checks filter on check ID.',
+           'wiki_url': '',
+        },
+        'checks_by_monitor_id': {
+           'endpoint': 'status/nodes',
+           'arguments': {
+              'monitor_id': {
+                'name': 'monitor_id',
+                'description': 'Monitor ID',
+                'type': 'query_string',
+                'required': True,
+                'default_value': '',
+                'valid_values': []
+               }
+           },
+           'description': 'Return a list of checks filter on monitor ID.',
+           'wiki_url': '',
+        },
+        'checks_by_query': {
+           'endpoint': 'status/nodes',
+           'arguments': {
+              'query': {
+                'name': 'query',
+                'description': 'Cloudkick query',
+                'type': 'query_string',
+                'required': True,
+                'default_value': '',
+                'valid_values': []
+              },
+              'include_metrics': {
+                'name': 'include_metrics',
+                'description': 'Include metrics in the response?',
+                'type': 'query_string',
+                'required': False,
+                'default_value': '',
+                'valid_values': [ 'true', 'false' ]
+              }
+           },
+           'description': 'Return a list of checks filter on Cloudkick query.',
+           'wiki_url': '',
+         }
+    }
 }
 
 
@@ -242,7 +326,6 @@ class Connection(object):
     kwarg_dict = self._build_request_kwarg_dict(path,
                                                 query_string_values,
                                                 url_values, post_values)
-
     return self._request_json(**kwarg_dict)
 
   def _build_request_kwarg_dict(self, path, query_string_values, url_values,
@@ -297,4 +380,20 @@ class Connection(object):
 
   def monitor_ips(self, **kwargs):
     data = self._api_request('monitor_ips', '1.0', kwargs)
+    return data
+
+  def checks_by_status(self, **kwargs):
+    data = self._api_request('checks_by_status', '2.0', kwargs)
+    return data
+
+  def checks_by_id(self, **kwargs):
+    data = self._api_request('checks_by_id', '2.0', kwargs)
+    return data
+
+  def checks_by_monitor_id(self, **kwargs):
+    data = self._api_request('checks_by_monitor_id', '2.0', kwargs)
+    return data
+
+  def checks_by_query(self, **kwargs):
+    data = self._api_request('checks_by_query', '2.0', kwargs)
     return data
