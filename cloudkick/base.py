@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 __all__ = ["Connection"]
 
 import os
@@ -70,7 +69,7 @@ API_CALLS = {
                 'valid_values': [ 'cpu', 'mem', 'disk' ]
                 }
             },
-            'description': '',
+            'description': 'Return live data for the specified check.',
             'wiki_url': '',
          },
 
@@ -217,6 +216,9 @@ class Connection(object):
 
       if values['required'] and not kwarg_value:
         raise ValueError('Missing required argument: %s' % (key))
+
+      if not values['required'] and not kwarg_value:
+        continue
 
       if values['valid_values'] and kwarg_value not in values['valid_values']:
         raise ValueError('Invalid value %s for argument %s, valid values are: %s' %
