@@ -61,7 +61,7 @@ class Checks(_ApiEndpoint):
         """Returns the total list of all the checks in the system"""
         params = {
             'monitor_id': monitor_id,
-            'node_ids': ",".join(node_ids),
+            'node_ids': node_ids,
         }
         return self._req_json("checks", params)
 
@@ -107,7 +107,7 @@ class Nodes(_ApiEndpoint):
                   'do_create': do_create}
 
         return self._req_json("nodes/%s/%s" % (node_id, op), params, 'POST')
-        
+
 
     def add_tag(self, node_id, tag_id=None, tag_name=None, do_create=False):
         """Apply tag to a node
@@ -137,14 +137,14 @@ class Nodes(_ApiEndpoint):
 
     def create(self, name, ip_address, details):
         """Creates a node on your account with a unique name
-        
+
         Keyword arguments
-            name - Name of the machine. This has to be unique over nodes 
+            name - Name of the machine. This has to be unique over nodes
                    that are online
             ip_address - The public ip address of the node
             details - This is a dictionary of nested key value pairs.
-                      These properties get indexed and are later to be used 
-                      in the query language. 
+                      These properties get indexed and are later to be used
+                      in the query language.
 
         """
         params = {'name': name,
@@ -169,15 +169,15 @@ class Nodes(_ApiEndpoint):
     def update(self, node_id, name, ip_address,
                  details, ssh_user=None, ssh_port=None):
         """Updates node on your account
-        
+
         Keyword arguments
             node_id - id of node to update
-            name - Name of the machine. This has to be unique over nodes 
+            name - Name of the machine. This has to be unique over nodes
                    that are online
             ip_address - The public ip address of the node
             details - This is a dictionary of nested key value pairs.
-                      These properties get indexed and are later to be used 
-                      in the query language. 
+                      These properties get indexed and are later to be used
+                      in the query language.
             ssh_user - Username for ssh-ing onto server via webterm (optional)
             ssh_port - ssh port use for webterm (optional)
 
