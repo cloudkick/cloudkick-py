@@ -18,14 +18,13 @@ except:
   import simplejson as json
 
 
-from cloudkick.base import Connection
+from cloudkick_api.base import Connection
 from pprint import pprint
 from pygooglechart import SimpleLineChart
 from pygooglechart import Axis
 from datetime import datetime, timedelta
 
-def gchart(conn, node, check, metric, start=datetime.now()-timedelta(days=1), end=datetime.now()):
-  data = conn.data(check['id'], name=metric, start=start, end=end)
+def gchart(data, node, check, metric, start=datetime.now()-timedelta(days=1), end=datetime.now()):
   d = []
   ts = []
   for p in  data['metrics'][0]['data']:
@@ -48,12 +47,16 @@ def gchart(conn, node, check, metric, start=datetime.now()-timedelta(days=1), en
 
 if __name__ == "__main__":
   c = Connection()
-  nodes = c.nodes()
-  node = nodes[20]
-  print node
-  checks = c.checks(node['id'])
-  print checks
-  check = checks[0][node['id']][0]
-  print check
-  metric = check['metrics'][1]
-  print gchart(c, node=node, check=check, metric=metric)
+  nodes = c.nodes.read()["items"]
+  node = nodes[-1]
+  print
+  print "NODE", node
+  checks = c.checks.read(node_ids=node['id'])
+  print
+  print "CHECKS: found", len(checks["items"])
+  check = checks["items"][0]
+  print "CHECK", check
+  #metric = check["metrics"] # this isn't implemented
+  metric = "duraction"
+  #data = conn.data(check['id'], name=metric, start=start, end=end) # this isn't implemented either
+  #print gchart(c, node=node, check=check, metric=metric)
