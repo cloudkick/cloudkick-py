@@ -127,8 +127,12 @@ class Connection(object):
                                                                    http_method=method,
                                                                    parameters=parameters)
         oauth_request.sign_request(signature_method, consumer, None)
-        url = oauth_request.to_url()
-        f = urllib.urlopen(url)
+        if method == "GET":
+            url = oauth_request.to_url()
+            f = urllib.urlopen(url)
+        else:
+            url = oauth_request.get_normalized_http_url()
+            f = urllib.urlopen(url, oauth_request.to_postdata())
         s = f.read()
         return s
 
@@ -157,6 +161,10 @@ class Connection(object):
         return endpoints.Checks(self)
 
     @property
+    def check_types(self):
+        return endpoints.CheckTypes(self)
+
+    @property
     def interesting_metrics(self):
         return endpoints.InterestingMetrics(self)
 
@@ -175,6 +183,10 @@ class Connection(object):
     @property
     def provider_types(self):
         return endpoints.ProviderTypes(self)
+
+    @property
+    def monitoring_servers(self):
+        return endpoints.MonitoringServers(self)
 
     @property
     def status_nodes(self):

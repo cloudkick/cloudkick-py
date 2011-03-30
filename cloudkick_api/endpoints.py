@@ -57,13 +57,21 @@ class ChangeLogs(_ApiEndpoint):
 
 class Checks(_ApiEndpoint):
 
-    def read(self, monitor_id=None, node_ids=None):
+    def read(self, monitor_id=None, node_ids=None, check_ids=None):
         """Returns the total list of all the checks in the system"""
         params = {
             'monitor_id': monitor_id,
             'node_ids': node_ids,
+            'check_ids': check_ids
         }
         return self._req_json("checks", params)
+
+
+class CheckTypes(_ApiEndpoint):
+
+    def read(self):
+        """Return a list of check types on your account"""
+        return self._req_json("check_types")
 
 
 class InterestingMetrics(_ApiEndpoint):
@@ -72,6 +80,11 @@ class InterestingMetrics(_ApiEndpoint):
         """Return a list of interesting metrics on your account"""
         return self._req_json("interesting_metrics")
 
+class MonitoringServers(_ApiEndpoint):
+
+    def read(self):
+        """Return a list of monitoring servers for your account"""
+        return self._req_json("monitoring_servers")
 
 class Monitors(_ApiEndpoint):
     """https://support.cloudkick.com/API/2.0/Monitors"""
@@ -135,7 +148,7 @@ class Nodes(_ApiEndpoint):
 
         return self._tag('remove_tag', node_id, tag_id, tag_name, do_create)
 
-    def create(self, name, ip_address, details):
+    def create(self, name, ip_address, details=None):
         """Creates a node on your account with a unique name
 
         Keyword arguments
@@ -166,8 +179,8 @@ class Nodes(_ApiEndpoint):
         }
         return self._req_json("nodes", params)
 
-    def update(self, node_id, name, ip_address,
-                 details, ssh_user=None, ssh_port=None):
+    def update(self, node_id, name=None, ip_address=None,
+                 details=None, ssh_user=None, ssh_port=None):
         """Updates node on your account
 
         Keyword arguments
@@ -189,7 +202,7 @@ class Nodes(_ApiEndpoint):
                   'ssh_user': ssh_user,
                   'ssh_port': ssh_port}
 
-        return self._req_json("nodes/%s" % node_id, params, 'POST')
+        return self._req_json("node/%s" % node_id, params, 'POST')
 
 
 class Providers(_ApiEndpoint):
