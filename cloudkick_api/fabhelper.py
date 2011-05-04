@@ -17,11 +17,68 @@
 __all__ = ["hosts", "roledefs", "load"]
 
 import sys
+import re
 from collections import defaultdict
 
 from cloudkick_api.base import Connection
 
 _CACHED_NODES = None
+
+class RoleDefs:
+    def __init__(self, roles):
+        self.roles = roles
+    
+    def __contains__(self, key):
+        try:
+            self.__getitem__(key)
+            return True
+        except KeyError:
+            return False
+        
+    def __getitem__(self, query):
+        roles = re.split(r'\s+', query)
+        hosts = []
+        if len(roles) == 1:
+            # If first role is a negative, let's populate the list first with every host
+            if roles[0][0] == '-':
+                for role in self.roles:
+                    for host in self.roles[role]:
+                        if not host in hosts:
+                            hosts.append(host)
+            else:
+                # Optimize if there is only one role
+                return self.roles[roles[0]]
+        
+        for role in roles:
+            if role[0] in ('-', '+'):
+                direction = role[0]
+                role = role[1:]
+            else:
+                direction = '+'
+            
+            if not role in self.roles:
+                # Role doesn't exist, skip it
+                continue
+            if direction == '+':
+                for host in self.roles[role]:
+                    if not host in hosts:
+                        hosts.append(host)
+            elif direction == '-':
+                for host in hosts:
+                    for to_remove in self.roles[role]:
+                        if to_remove in hosts:
+                            hosts.remove(to_remove)
+        if len(hosts) > 0:
+            return hosts
+        
+        # Throw a KeyError to keep consistent with a dictionary
+        raise KeyError(query)
+    
+    def __str__(self):
+        return self.roles.__str__()
+    
+    def __repr__(self):
+        return self.roles.__repr__()
 
 def _get_data():
     global _CACHED_NODES
@@ -48,7 +105,7 @@ def roledefs():
                 if node["tags"]:
                     for t in node["tags"]:
                         rd[t["name"]].append(node["ipaddress"])
-            return rd
+            return RoleDefs(rd)
         else:
             print "Problem extracting ipaddresses from (type=%s) %s" % (type(d), d)
             return None
