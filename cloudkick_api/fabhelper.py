@@ -25,8 +25,17 @@ from cloudkick_api.base import Connection
 _CACHED_NODES = None
 
 class RoleDefs:
+    _cache = {}
+    
     def __init__(self, roles):
         self.roles = roles
+        
+    def _get_data(self, query):
+        if not query in self._cache:
+            c = Connection()
+            self._cache[query] = c.nodes.read(query=query)
+        
+        return self._cache[query]
     
     def __contains__(self, key):
         try:
@@ -36,41 +45,14 @@ class RoleDefs:
             return False
         
     def __getitem__(self, query):
-        roles = re.split(r'\s+', query)
-        hosts = []
-        if len(roles) == 1:
-            # If first role is a negative, let's populate the list first with every host
-            if roles[0][0] == '-':
-                for role in self.roles:
-                    for host in self.roles[role]:
-                        if not host in hosts:
-                            hosts.append(host)
-            else:
-                # Optimize if there is only one role
-                return self.roles[roles[0]]
+        if query in self.roles:
+            return self.roles[query]
         
-        for role in roles:
-            if role[0] in ('-', '+'):
-                direction = role[0]
-                role = role[1:]
-            else:
-                direction = '+'
-            
-            if not role in self.roles:
-                # Role doesn't exist, skip it
-                continue
-            if direction == '+':
-                for host in self.roles[role]:
-                    if not host in hosts:
-                        hosts.append(host)
-            elif direction == '-':
-                for host in hosts:
-                    for to_remove in self.roles[role]:
-                        if to_remove in hosts:
-                            hosts.remove(to_remove)
-        if len(hosts) > 0:
-            return hosts
+        d = self._get_data(query)
         
+        if d and 'items' in d and len(d['items']) > 0:
+                return [node['ipaddress'] for node in d['items']]
+
         # Throw a KeyError to keep consistent with a dictionary
         raise KeyError(query)
     
