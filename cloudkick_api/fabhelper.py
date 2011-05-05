@@ -17,7 +17,6 @@
 __all__ = ["hosts", "roledefs", "load"]
 
 import sys
-import re
 from collections import defaultdict
 
 from cloudkick_api.base import Connection
