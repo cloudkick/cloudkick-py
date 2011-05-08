@@ -79,17 +79,17 @@ def hosts():
         return None
 
 def roledefs():
-        rd = defaultdict(list)
-        d = _get_data()
-        if d and 'items' in d:
-            for node in d['items']:
-                if node["tags"]:
-                    for t in node["tags"]:
-                        rd[t["name"]].append(node["ipaddress"])
-            return RoleDefs(rd)
-        else:
-            print "Problem extracting ipaddresses from (type=%s) %s" % (type(d), d)
-            return None
+    rd = defaultdict(list)
+    d = _get_data()
+    if d and 'items' in d:
+        for node in d['items']:
+            if node["tags"]:
+                for t in node["tags"]:
+                    rd[t["name"]].append(node["ipaddress"])
+        return RoleDefs(rd)
+    else:
+        print "Problem extracting ipaddresses from (type=%s) %s" % (type(d), d)
+        return None
 
 def load(x = None):
     from fabric.api import env
