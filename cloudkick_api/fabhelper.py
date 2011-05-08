@@ -17,41 +17,49 @@
 __all__ = ["hosts", "roledefs", "load"]
 
 import sys
-from collections import defaultdict
 
 from cloudkick_api.base import Connection
 
-_CACHED_NODES = None
+_QUERY_CACHE = {}
 
-def _get_data():
-    global _CACHED_NODES
-    if _CACHED_NODES is None:
-        c = Connection()
-        _CACHED_NODES = c.nodes.read()
-    return _CACHED_NODES
+class RoleDefs(object):
 
+    def _get_data(self, query):
+        global _QUERY_CACHE
+        if not query in _QUERY_CACHE:
+            connection = Connection()
+            _QUERY_CACHE[query] = connection.nodes.read(query=query)
+
+        return _QUERY_CACHE[query]
+
+    def __contains__(self, key):
+        try:
+            self.__getitem__(key)
+            return True
+        except KeyError:
+            return False
+
+    def __getitem__(self, query):
+        data = self._get_data(query)
+
+        if data and 'items' in data and len(data['items']) > 0:
+            return [node['ipaddress'] for node in data['items']]
+
+        # Throw a KeyError to keep consistent with a dictionary
+        raise KeyError(query)
 
 def hosts():
     # TODO: need generic DNS (?)
-    d = _get_data()
-    if d and 'items' in d:
-        return [node["ipaddress"] for node in d['items']]
-    else:
-        print "Problem extracting ipaddresses from (type=%s) %s" % (type(d), d)
-        return None
+    rd = RoleDefs()
+    try:
+        return rd['*']
+    except KeyError:
+        # Always return SOMETHING!
+        return []
 
 def roledefs():
-        rd = defaultdict(list)
-        d = _get_data()
-        if d and 'items' in d:
-            for node in d['items']:
-                if node["tags"]:
-                    for t in node["tags"]:
-                        rd[t["name"]].append(node["ipaddress"])
-            return rd
-        else:
-            print "Problem extracting ipaddresses from (type=%s) %s" % (type(d), d)
-            return None
+    rd = RoleDefs()
+    return rd
 
 def load(x = None):
     from fabric.api import env
