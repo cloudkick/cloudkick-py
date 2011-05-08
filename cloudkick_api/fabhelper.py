@@ -50,10 +50,12 @@ class RoleDefs(object):
 
 def hosts():
     # TODO: need generic DNS (?)
-    data = RoleDefs()._get_data(query='*')
-
-    if data and 'items' in data and len(data['items']) > 0:
-        return [node['ipaddress'] for node in data['items']]
+    rd = RoleDefs()
+    try:
+        return rd['*']
+    except KeyError:
+        # Always return SOMETHING!
+        return []
 
 def roledefs():
     rd = RoleDefs()
