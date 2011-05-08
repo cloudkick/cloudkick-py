@@ -25,39 +25,39 @@ _CACHED_NODES = None
 
 class RoleDefs:
     _cache = {}
-    
+
     def __init__(self, roles):
         self.roles = roles
-        
+
     def _get_data(self, query):
         if not query in self._cache:
             c = Connection()
             self._cache[query] = c.nodes.read(query=query)
-        
+
         return self._cache[query]
-    
+
     def __contains__(self, key):
         try:
             self.__getitem__(key)
             return True
         except KeyError:
             return False
-        
+
     def __getitem__(self, query):
         if query in self.roles:
             return self.roles[query]
-        
+
         d = self._get_data(query)
-        
+
         if d and 'items' in d and len(d['items']) > 0:
                 return [node['ipaddress'] for node in d['items']]
 
         # Throw a KeyError to keep consistent with a dictionary
         raise KeyError(query)
-    
+
     def __str__(self):
         return self.roles.__str__()
-    
+
     def __repr__(self):
         return self.roles.__repr__()
 
