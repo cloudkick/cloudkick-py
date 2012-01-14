@@ -204,6 +204,10 @@ class Nodes(_ApiEndpoint):
 
         return self._req_json("node/%s" % node_id, params, 'POST')
 
+    def metric_data(self, node_id, check_name):
+        url = "query/node/%s/check/%s" % (node_id, check_name)
+        return self._req_json(url, force_api_version="1.0")
+
 
 class Providers(_ApiEndpoint):
 
