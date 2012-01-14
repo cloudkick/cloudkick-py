@@ -208,6 +208,10 @@ class Nodes(_ApiEndpoint):
         url = "query/node/%s/check/%s" % (node_id, check_name)
         return self._req_json(url, force_api_version="1.0")
 
+    def custom_metric_data(self, node_id, plugin_name):
+        url = "query/node/%s/check/plugin/%s" % (node_id, plugin_name)
+        return self._req_json(url, force_api_version="1.0")
+
 
 class Providers(_ApiEndpoint):
 
