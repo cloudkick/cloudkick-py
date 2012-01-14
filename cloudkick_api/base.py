@@ -109,7 +109,7 @@ class Connection(object):
         """Filter out any null parameters"""
         return dict((k, v) for k, v in params.iteritems() if v is not None)
 
-    def _request(self, url, parameters=None, method='GET'):
+    def _request(self, url, parameters=None, method='GET', force_api_version=None):
         if not parameters:
             parameters = None
         else:
@@ -121,7 +121,11 @@ class Connection(object):
             protocol = "http://"
         else:
             protocol = "https://"
-        url = '%s%s/%s/%s' % (protocol, self.api_server, self.api_version, url)
+        if force_api_version:
+            api_version = force_api_version
+        else:
+            api_version = self.api_version
+        url = '%s%s/%s/%s' % (protocol, self.api_server, api_version, url)
         oauth_request = oauth.OAuthRequest.from_consumer_and_token(consumer,
                                                                    http_url=url,
                                                                    http_method=method,
@@ -136,8 +140,8 @@ class Connection(object):
         s = f.read()
         return s
 
-    def _request_json(self, *args):
-        r = self._request(*args)
+    def _request_json(self, *args, **kwargs):
+        r = self._request(*args, **kwargs)
 
         try:
             return json.loads(r)
