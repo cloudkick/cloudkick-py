@@ -15,7 +15,7 @@
 
 
 __all__ = ["__version__", "Connection"]
-__version__ = "0.1.0-dev"
+__version__ = "0.2.0-dev"
 
 from cloudkick_api.base import Connection
 from cloudkick_api import fabhelper as fab
